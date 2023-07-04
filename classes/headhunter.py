@@ -20,7 +20,7 @@ class HeadHunterAPI:
         result_page = response.json()
         self.vacancies = result_page['items']
         while len(result_page['items']) == 100:
-            print(f"Загружено страниц c вакансиями: {params['page']}")
+            print(f"Загружено страниц c вакансиями: {params['page'] + 1}")
             params['page'] += 1
             response = requests.get(URL, params)
             result_page = response.json()
