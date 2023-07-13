@@ -1,6 +1,3 @@
-from classes import headhunter, superjob
-
-
 class Vacancy:
     all_vac = []
 
@@ -14,7 +11,6 @@ class Vacancy:
                  published: str,
                  requirements: str,
                  responsibility: str):
-
         self.vacancy_id = vacancy_id
         self.name = name
         self.salary_from = salary_from
@@ -26,14 +22,5 @@ class Vacancy:
         self.responsibility = responsibility
         self.all_vac.append(self)
 
-    def sort_by_date(self):
-        pass
-
-    def sort_by_salary(self):
-        pass
-
-    def delete_vacancy(self):
-        pass
-
-    def print_info(self):
-        pass
+    def __len__(self):
+        return len(self.all_vac)
