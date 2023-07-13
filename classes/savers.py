@@ -5,6 +5,9 @@ from classes.vacancy import Vacancy
 
 
 class Saver(ABC):
+    """
+    абстрактный класс для работы с файлами
+    """
 
     @abstractmethod
     def save_vacancies(self):
@@ -16,6 +19,9 @@ class Saver(ABC):
 
 
 class JSONSaver(Saver):
+    """
+    класс для работы с JSON файлом
+    """
 
     def save_vacancies(self):
         json_dict = []

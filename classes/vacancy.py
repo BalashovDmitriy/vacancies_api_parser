@@ -1,4 +1,7 @@
 class Vacancy:
+    """
+    Класс для работы с вакансиями
+    """
     all_vac = []
 
     def __init__(self,

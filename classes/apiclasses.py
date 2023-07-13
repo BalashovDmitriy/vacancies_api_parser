@@ -8,6 +8,9 @@ SUPER_JOB_API_KEY = environ.get('SUPERJOB_API_KEY')
 
 
 class APIWorker(ABC):
+    """
+    абстрактный класс для работы с API
+    """
     def __init__(self):
         self.vacancies = None
 
@@ -17,6 +20,9 @@ class APIWorker(ABC):
 
 
 class HeadHunterAPI(APIWorker):
+    """
+    класс для работы с headhunter API
+    """
 
     def get_vacancies(self, query: str) -> dict:
         print(f'\nПолучаем данные с {URL_HH}...')
@@ -42,6 +48,9 @@ class HeadHunterAPI(APIWorker):
 
 
 class SuperJobAPI(APIWorker):
+    """
+    класс для работы с superjob API
+    """
 
     def get_vacancies(self, query: str) -> dict:
         print(f'\nПолучаем данные с {URL_SJ}...')
