@@ -1,10 +1,16 @@
 from datetime import datetime
-from datetime import time
+from operator import itemgetter
 
 from classes.vacancy import Vacancy
 
 
-def format_salary(value_from, value_to):
+def format_salary(value_from, value_to) -> str:
+    """
+    форматирование поля зарплаты для вывода в консоль
+    :param value_from: зарплата от
+    :param value_to: зарплата до
+    :return: правильная строка с зарплатой
+    """
     if value_from:
         if value_to:
             return f"от {value_from} до {value_to} руб."
@@ -15,7 +21,13 @@ def format_salary(value_from, value_to):
             return f"до {value_to} руб."
 
 
-def create_instances_from_hh(database):
+def create_instances_from_hh(database) -> None:
+    """
+    Создаём экземпляры класса Vacancy из вакансий с headhunter
+    Также мы проверяем, чтобы зарплата была в рублях, иначе игнорируем вакансию
+    :param database: база данных из headhunter API в формате JSON
+    :return: None
+    """
     for vacancy in database:
         if vacancy['salary']['currency'] != "RUR":
             continue
@@ -30,9 +42,18 @@ def create_instances_from_hh(database):
                 url=vacancy['alternate_url'])
 
 
-def create_instances_from_sj(database):
+def create_instances_from_sj(database, query) -> None:
+    """
+    Создаём экземпляры класса Vacancy из вакансий с superjob
+    Также мы проверяем, чтобы зарплата была в рублях, иначе игнорируем вакансию
+    Дополнительная фильтрация по значению 'profession' нужна для того, чтобы убрать
+    совсем нерелевантные вакансии для нашего запроса(только у superjob)
+    :param database: база данных из superjob API в формате JSON
+    :param query: запрос для дополнительной фильтрации вакансий
+    :return: None
+    """
     for vacancy in database:
-        if vacancy['currency'] != "rub":
+        if vacancy['currency'] != "rub" or query not in vacancy['profession']:
             continue
         Vacancy(vacancy_id=str(vacancy['id']),
                 name=vacancy['profession'],
@@ -45,11 +66,142 @@ def create_instances_from_sj(database):
                 url=vacancy['link'])
 
 
-def print_tab():
+def print_tab(top_n) -> None:
+    """
+    Вывод в консоль top_n элементов вакансий
+    :param top_n: количество вакансий для показа в консоли
+    :return: None
+    """
+    counter = 0
     print("id".ljust(8), "Вакансия".ljust(75), "Зарплата".ljust(30), "Город".ljust(20),
           "Размещено".ljust(25), "Ссылка".ljust(30))
     for element in Vacancy.all_vac:
         print(element.vacancy_id.ljust(8), element.name[:75].ljust(75),
               format_salary(element.salary_from, element.salary_to).ljust(30),
               element.city[:20].ljust(20), element.published.ljust(25), element.url.ljust(30))
-    print(f"Всего {len(Vacancy.all_vac)} вакансий загружено")
+        counter += 1
+        if counter == top_n:
+            break
+
+
+def total() -> int:
+    """
+    :return: возвращает количество вакансий после загрузки по API
+    """
+    if len(Vacancy.all_vac) == 0:
+        quit("Неудачный запрос")
+    return len(Vacancy.all_vac)
+
+
+def user_input_top(total_vac) -> int:
+    """
+    функция запроса к пользователю количества вакансий для вывода в консоль
+    :param total_vac: максимально возможное количество вакансий для вывода в консоль
+    :return: количество вакансий для вывода
+    """
+    while True:
+        top_n = input(f"Введите количество вакансий для вывода в топ N(от 1 до {total_vac}): ")
+        if not top_n.isdigit():
+            continue
+        elif int(top_n) not in range(1, total_vac+1):
+            continue
+        break
+    return int(top_n)
+
+
+def user_input_sort_method() -> int:
+    """
+    функция запроса к пользователю по сортировке наших вакансий
+    :return: метод сортировки
+    """
+    while True:
+        sort_method = input("\nВыберите способ сортировки: \n"
+                            "1. По дате размещения вакансии\n"
+                            "2. По зарплате\n"
+                            "3. По городу в алфавитном порядке\n")
+        if not sort_method.isdigit():
+            continue
+        elif int(sort_method) not in [1, 2, 3]:
+            continue
+        break
+    return int(sort_method)
+
+
+def create_instances(data) -> None:
+    """
+    функция создания основных экземпляров класса для работы пользователя
+    :param data: список словарей, полученный из файла
+    :return:
+    """
+    for vacancy in data:
+        if isinstance(vacancy['published'], datetime):
+            vacancy['published'] = vacancy['published'].strftime("%d.%m.%Y %H:%M")
+        Vacancy(vacancy['vacancy_id'],
+                vacancy['name'],
+                vacancy['salary_from'],
+                vacancy['salary_to'],
+                vacancy['city'],
+                vacancy['url'],
+                vacancy['published'],
+                vacancy['requirements'],
+                vacancy['responsibility'])
+
+
+def sort_by_date(data) -> list:
+    """
+    сортировка по дате
+    :param data: список словарей
+    :return: отформатированный список словарей по дате
+    """
+    for vacancy in data:
+        vacancy['published'] = datetime.strptime(vacancy['published'], "%d.%m.%Y %H:%M")
+    sorted_vacancy = sorted(data, key=itemgetter('published'), reverse=True)
+    return sorted_vacancy
+
+
+def sort_by_salary(data) -> list:
+    """
+    сортировка по зарплате
+    :param data: список словарей
+    :return: отформатированный список словарей по зарплате
+    """
+    for vacancy in data:
+        if vacancy.get('salary_from') is None:
+            vacancy['salary_from'] = 0
+    sorted_vacancy = sorted(data, key=itemgetter('salary_from'), reverse=True)
+    for vacancy in sorted_vacancy:
+        if vacancy['salary_from'] == 0:
+            vacancy['salary_from'] = None
+    return sorted_vacancy
+
+
+def sort_by_city(data) -> list:
+    """
+    сортировка по городу в алфавитном порядке
+    :param data: список словарей
+    :return: отформатированный список словарей по городу в алфавитном порядке
+    """
+    sorted_vacancy = sorted(data, key=itemgetter('city'))
+    return sorted_vacancy
+
+
+def filter_vacancies(data, query) -> list:
+    """
+    функция дополнительной сортировки вакансий
+    :param data: список словарей
+    :param query: запрос/запросы от пользователя
+    :return: отформатированный список словарей после дополнительной сортировки по ключам
+    """
+    result = []
+    for vacancy in data:
+        for element in query:
+            if element.lower() in vacancy['name'].lower():
+                result.append(vacancy)
+            elif vacancy['requirements'] is None:
+                continue
+            elif vacancy['responsibility'] is None:
+                continue
+            elif element.lower() in vacancy['requirements'].lower() \
+                    or element.lower() in vacancy['responsibility'].lower():
+                result.append(vacancy)
+    return result
