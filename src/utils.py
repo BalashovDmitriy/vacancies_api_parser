@@ -103,7 +103,7 @@ def user_input_top(total_vac) -> int:
         top_n = input(f"Введите количество вакансий для вывода в топ N(от 1 до {total_vac}): ")
         if not top_n.isdigit():
             continue
-        elif int(top_n) not in range(1, total_vac+1):
+        elif int(top_n) not in range(1, total_vac + 1):
             continue
         break
     return int(top_n)
@@ -131,20 +131,20 @@ def create_instances(data) -> None:
     """
     функция создания основных экземпляров класса для работы пользователя
     :param data: список словарей, полученный из файла
-    :return:
+    :return: None
     """
     for vacancy in data:
         if isinstance(vacancy['published'], datetime):
             vacancy['published'] = vacancy['published'].strftime("%d.%m.%Y %H:%M")
-        Vacancy(vacancy['vacancy_id'],
-                vacancy['name'],
-                vacancy['salary_from'],
-                vacancy['salary_to'],
-                vacancy['city'],
-                vacancy['url'],
-                vacancy['published'],
-                vacancy['requirements'],
-                vacancy['responsibility'])
+        Vacancy(vacancy_id=vacancy['_Vacancy__vacancy_id'],
+                name=vacancy['name'],
+                salary_from=vacancy['salary_from'],
+                salary_to=vacancy['salary_to'],
+                city=vacancy['city'],
+                url=vacancy['url'],
+                published=vacancy['published'],
+                requirements=vacancy['requirements'],
+                responsibility=vacancy['responsibility'])
 
 
 def sort_by_date(data) -> list:
@@ -205,3 +205,58 @@ def filter_vacancies(data, query) -> list:
                     or element.lower() in vacancy['responsibility'].lower():
                 result.append(vacancy)
     return result
+
+
+def print_vac(id_) -> None:
+    """
+    вывод подробной информации по выбранной вакансии
+    :param id_: id вакансии
+    :return: None
+    """
+    for vacancy in Vacancy.all_vac:
+        if vacancy.vacancy_id == id_:
+            print(f"\nID вакансии: {vacancy.vacancy_id}\n"
+                  f"Вакансия: {vacancy.name}\n"
+                  f"Зарплата: {format_salary(vacancy.salary_from, vacancy.salary_to)}\n"
+                  f"Город: {vacancy.city}\n"
+                  f"Ссылка на вакансию: {vacancy.url}\n"
+                  f"Дата размещения: {vacancy.published}\n"
+                  f"Требования: {vacancy.requirements}\n"
+                  f"Обязанности: {vacancy.responsibility}")
+
+
+def work_with_vacancies(top, json_save) -> None:
+    """
+    функция для работы с вакансиями пользователем
+    :param top: количество вакансий для вывода
+    :param json_save: объект для работы с файлом
+    :return: None
+    """
+    vacancies = Vacancy.all_vac
+    while True:
+        print("\nРабота с вакансиями\n"
+              f"Всего вакансий: {len(vacancies)}\n"
+              "Для вывода дополнительной информации по вакансии введите id_вакансии(8 цифр)\n"
+              "Для удаления вакансии введите del id_вакансии(например: del 86434568\n"
+              "Для сохранения текущей базы в файл json введите save\n"
+              "Для вывода текущей таблицы с вакансиями введите print\n"
+              "Для выхода введите exit")
+        user_input = input("Ввод: ").split()
+        if user_input[0].lower() == "exit":
+            return
+        elif user_input[0].lower() == "print":
+            print_tab(top)
+        elif user_input[0].lower() == "save":
+            json_save.save_vacancies()
+            print("Сохранение успешно.")
+        elif user_input[0].lower() == "del" and user_input[1].isdigit():
+            for vacancy in vacancies:
+                if vacancy.vacancy_id == user_input[1]:
+                    vacancy.deleter(vacancy)
+                    print(f"Вакансия {user_input[1]} удалена.")
+        elif len(user_input[0]) == 8 and user_input[0].isdigit():
+            for vacancy in vacancies:
+                if vacancy.vacancy_id == user_input[0]:
+                    print_vac(user_input[0])
+        else:
+            print("Неизвестный запрос")

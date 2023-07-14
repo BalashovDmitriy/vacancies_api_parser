@@ -14,7 +14,7 @@ class Vacancy:
                  published: str,
                  requirements: str,
                  responsibility: str):
-        self.vacancy_id = vacancy_id
+        self.__vacancy_id = vacancy_id
         self.name = name
         self.salary_from = salary_from
         self.salary_to = salary_to
@@ -25,5 +25,24 @@ class Vacancy:
         self.responsibility = responsibility
         self.all_vac.append(self)
 
+    @property
+    def vacancy_id(self):
+        return self.__vacancy_id
+
+    @vacancy_id.setter
+    def vacancy_id(self, value):
+        self.__vacancy_id = value
+
+    def deleter(self, vacancy):
+        index = 0
+        for vac in self.all_vac:
+            if vac.__vacancy_id == vacancy.__vacancy_id:
+                break
+            index += 1
+        del self.all_vac[index]
+
     def __len__(self):
         return len(self.all_vac)
+
+    def __ge__(self, other):
+        pass

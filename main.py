@@ -49,7 +49,9 @@ def user_interaction():
         result = sort_by_city(filtered)
     create_instances(result)  # создаём экземпляры класса исходя из наших запросов
     top_n = user_input_top(len(vacancy))  # запрашиваем сколько вакансий выводить в таблицу
-    print_tab(top_n)
+    print_tab(top_n)  # выводим таблицу с результатами
+
+    work_with_vacancies(top_n, json_saver)  # работа с вакансиями
 
 
 if __name__ == '__main__':
