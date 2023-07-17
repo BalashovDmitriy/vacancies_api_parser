@@ -34,12 +34,7 @@ class Vacancy:
         self.__vacancy_id = value
 
     def deleter(self, vacancy):
-        index = 0
-        for vac in self.all_vac:
-            if vac.__vacancy_id == vacancy.__vacancy_id:
-                break
-            index += 1
-        del self.all_vac[index]
+        self.all_vac.remove(vacancy)
 
     def __len__(self):
         return len(self.all_vac)
